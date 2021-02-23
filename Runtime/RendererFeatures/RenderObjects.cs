@@ -91,7 +91,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            renderer.EnqueuePass(renderObjectsPass);
+            renderer.AddPass(renderObjectsPass);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+
         }
     }
 }

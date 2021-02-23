@@ -181,11 +181,11 @@ namespace UnityEngine.Experimental.Rendering.Universal
             if (stackHasPostProcess && cameraData.renderType == CameraRenderType.Base)
             {
                 m_ColorGradingLutPass.Setup(k_ColorGradingLutHandle);
-                EnqueuePass(m_ColorGradingLutPass);
+                AddPass(m_ColorGradingLutPass);
             }
 
             m_Render2DLightingPass.ConfigureTarget(colorTargetHandle.Identifier(), depthTargetHandle.Identifier());
-            EnqueuePass(m_Render2DLightingPass);
+            AddPass(m_Render2DLightingPass);
 
             // When using Upscale Render Texture on a Pixel Perfect Camera, we want all post-processing effects done with a low-res RT,
             // and only upscale the low-res RT to fullscreen when blitting it to camera target. Also, final post processing pass is not run in this case,
@@ -207,19 +207,19 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     requireFinalPostProcessPass,
                     postProcessDestHandle == RenderTargetHandle.CameraTarget);
 
-                EnqueuePass(m_PostProcessPass);
+                AddPass(m_PostProcessPass);
                 colorTargetHandle = postProcessDestHandle;
             }
 
             if (requireFinalPostProcessPass)
             {
                 m_FinalPostProcessPass.SetupFinalPass(colorTargetHandle);
-                EnqueuePass(m_FinalPostProcessPass);
+                AddPass(m_FinalPostProcessPass);
             }
             else if (lastCameraInStack && colorTargetHandle != RenderTargetHandle.CameraTarget)
             {
                 m_FinalBlitPass.Setup(cameraTargetDescriptor, colorTargetHandle);
-                EnqueuePass(m_FinalBlitPass);
+                AddPass(m_FinalBlitPass);
             }
         }
 

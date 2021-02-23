@@ -580,7 +580,7 @@ namespace UnityEngine.Rendering.Universal
         /// Enqueues a render pass for execution.
         /// </summary>
         /// <param name="pass">Render pass to be enqueued.</param>
-        public void EnqueuePass(ScriptableRenderPass pass)
+        public void AddPass(ScriptableRenderPass pass)
         {
             m_ActiveRenderPassQueue.Add(pass);
         }

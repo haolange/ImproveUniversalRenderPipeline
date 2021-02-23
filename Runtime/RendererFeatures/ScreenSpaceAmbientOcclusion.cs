@@ -79,7 +79,7 @@ namespace UnityEngine.Rendering.Universal
             bool shouldAdd = m_SSAOPass.Setup(m_Settings);
             if (shouldAdd)
             {
-                renderer.EnqueuePass(m_SSAOPass);
+                renderer.AddPass(m_SSAOPass);
             }
         }
 

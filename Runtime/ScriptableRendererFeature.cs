@@ -23,6 +23,11 @@ namespace UnityEngine.Rendering.Universal
         public abstract void Create();
 
         /// <summary>
+        /// Release this feature's resources. This is called every time serialization happens.
+        /// </summary>
+        //public abstract void Release();
+
+        /// <summary>
         /// Injects one or multiple <c>ScriptableRenderPass</c> in the renderer.
         /// </summary>
         /// <param name="renderPasses">List of render passes to add to.</param>
@@ -58,8 +63,6 @@ namespace UnityEngine.Rendering.Universal
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-        }
+        protected abstract void Dispose(bool disposing);
     }
 }

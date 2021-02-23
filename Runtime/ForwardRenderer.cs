@@ -256,15 +256,15 @@ namespace UnityEngine.Rendering.Universal
             {
                 ConfigureCameraTarget(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget);
                 AddRenderPasses(ref renderingData);
-                EnqueuePass(m_RenderOpaqueForwardPass);
+                AddPass(m_RenderOpaqueForwardPass);
 
                 // TODO: Do we need to inject transparents and skybox when rendering depth only camera? They don't write to depth.
-                EnqueuePass(m_DrawSkyboxPass);
+                AddPass(m_DrawSkyboxPass);
 #if ADAPTIVE_PERFORMANCE_2_1_0_OR_NEWER
                 if (!needTransparencyPass)
                     return;
 #endif
-                EnqueuePass(m_RenderTransparentForwardPass);
+                AddPass(m_RenderTransparentForwardPass);
                 return;
             }
 
@@ -388,46 +388,46 @@ namespace UnityEngine.Rendering.Universal
             bool hasPassesAfterPostProcessing = activeRenderPassQueue.Find(x => x.renderPassEvent == RenderPassEvent.AfterRendering) != null;
 
             if (mainLightShadows)
-                EnqueuePass(m_MainLightShadowCasterPass);
+                AddPass(m_MainLightShadowCasterPass);
 
             if (additionalLightShadows)
-                EnqueuePass(m_AdditionalLightsShadowCasterPass);
+                AddPass(m_AdditionalLightsShadowCasterPass);
 
             if (requiresDepthPrepass)
             {
                 if (renderPassInputs.requiresNormalsTexture)
                 {
                     m_DepthNormalPrepass.Setup(cameraTargetDescriptor, m_DepthTexture, m_NormalsTexture);
-                    EnqueuePass(m_DepthNormalPrepass);
+                    AddPass(m_DepthNormalPrepass);
                 }
                 else
                 {
                     m_DepthPrepass.Setup(cameraTargetDescriptor, m_DepthTexture);
-                    EnqueuePass(m_DepthPrepass);
+                    AddPass(m_DepthPrepass);
                 }
             }
 
             if (generateColorGradingLUT)
             {
                 m_ColorGradingLutPass.Setup(m_ColorGradingLut);
-                EnqueuePass(m_ColorGradingLutPass);
+                AddPass(m_ColorGradingLutPass);
             }
 
 #if ENABLE_VR && ENABLE_XR_MODULE
             if (cameraData.xr.hasValidOcclusionMesh)
-                EnqueuePass(m_XROcclusionMeshPass);
+                AddPass(m_XROcclusionMeshPass);
 #endif
 
             if (this.actualRenderingMode == RenderingMode.Deferred)
                 EnqueueDeferred(ref renderingData, requiresDepthPrepass, mainLightShadows, additionalLightShadows);
             else
-                EnqueuePass(m_RenderOpaqueForwardPass);
+                AddPass(m_RenderOpaqueForwardPass);
 
             Skybox cameraSkybox;
             cameraData.camera.TryGetComponent<Skybox>(out cameraSkybox);
             bool isOverlayCamera = cameraData.renderType == CameraRenderType.Overlay;
             if (camera.clearFlags == CameraClearFlags.Skybox && (RenderSettings.skybox != null || cameraSkybox?.material != null) && !isOverlayCamera)
-                EnqueuePass(m_DrawSkyboxPass);
+                AddPass(m_DrawSkyboxPass);
 
             // If a depth texture was created we necessarily need to copy it, otherwise we could have render it to a renderbuffer.
             // If deferred rendering path was selected, it has already made a copy.
@@ -438,7 +438,7 @@ namespace UnityEngine.Rendering.Universal
             if (requiresDepthCopyPass)
             {
                 m_CopyDepthPass.Setup(m_ActiveCameraDepthAttachment, m_DepthTexture);
-                EnqueuePass(m_CopyDepthPass);
+                AddPass(m_CopyDepthPass);
             }
 
             // For Base Cameras: Set the depth texture to the far Z if we do not have a depth prepass or copy depth
@@ -453,7 +453,7 @@ namespace UnityEngine.Rendering.Universal
                 // We need to migrate this data to renderer. For now, we query the method in the active asset.
                 Downsampling downsamplingMethod = UniversalRenderPipeline.asset.opaqueDownsampling;
                 m_CopyColorPass.Setup(m_ActiveCameraColorAttachment.Identifier(), m_OpaqueColor, downsamplingMethod);
-                EnqueuePass(m_CopyColorPass);
+                AddPass(m_CopyColorPass);
             }
 #if ADAPTIVE_PERFORMANCE_2_1_0_OR_NEWER
             if (needTransparencyPass)
@@ -461,12 +461,12 @@ namespace UnityEngine.Rendering.Universal
             {
                 if (transparentsNeedSettingsPass)
                 {
-                    EnqueuePass(m_TransparentSettingsPass);
+                    AddPass(m_TransparentSettingsPass);
                 }
 
-                EnqueuePass(m_RenderTransparentForwardPass);
+                AddPass(m_RenderTransparentForwardPass);
             }
-            EnqueuePass(m_OnRenderObjectCallbackPass);
+            AddPass(m_OnRenderObjectCallbackPass);
 
             bool lastCameraInTheStack = cameraData.resolveFinalTarget;
             bool hasCaptureActions = renderingData.cameraData.captureActions != null && lastCameraInTheStack;
@@ -487,7 +487,7 @@ namespace UnityEngine.Rendering.Universal
                     // if resolving to screen we need to be able to perform sRGBConvertion in post-processing if necessary
                     bool doSRGBConvertion = resolvePostProcessingToCameraTarget;
                     m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, destination, m_ActiveCameraDepthAttachment, m_ColorGradingLut, applyFinalPostProcessing, doSRGBConvertion);
-                    EnqueuePass(m_PostProcessPass);
+                    AddPass(m_PostProcessPass);
                 }
 
 
@@ -498,13 +498,13 @@ namespace UnityEngine.Rendering.Universal
                 if (applyFinalPostProcessing)
                 {
                     m_FinalPostProcessPass.SetupFinalPass(sourceForFinalPass);
-                    EnqueuePass(m_FinalPostProcessPass);
+                    AddPass(m_FinalPostProcessPass);
                 }
 
                 if (renderingData.cameraData.captureActions != null)
                 {
                     m_CapturePass.Setup(sourceForFinalPass);
-                    EnqueuePass(m_CapturePass);
+                    AddPass(m_CapturePass);
                 }
 
                 // if post-processing then we already resolved to camera target while doing post.
@@ -521,7 +521,7 @@ namespace UnityEngine.Rendering.Universal
                 if (!cameraTargetResolved)
                 {
                     m_FinalBlitPass.Setup(cameraTargetDescriptor, sourceForFinalPass);
-                    EnqueuePass(m_FinalBlitPass);
+                    AddPass(m_FinalBlitPass);
                 }
 
 #if ENABLE_VR && ENABLE_XR_MODULE
@@ -532,7 +532,7 @@ namespace UnityEngine.Rendering.Universal
                 if (!depthTargetResolved && cameraData.xr.copyDepth)
                 {
                     m_XRCopyDepthPass.Setup(m_ActiveCameraDepthAttachment, RenderTargetHandle.GetCameraTarget(cameraData.xr));
-                    EnqueuePass(m_XRCopyDepthPass);
+                    AddPass(m_XRCopyDepthPass);
                 }
 #endif
             }
@@ -541,7 +541,7 @@ namespace UnityEngine.Rendering.Universal
             else if (applyPostProcessing)
             {
                 m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, m_AfterPostProcessColor, m_ActiveCameraDepthAttachment, m_ColorGradingLut, false, false);
-                EnqueuePass(m_PostProcessPass);
+                AddPass(m_PostProcessPass);
             }
 
 #if UNITY_EDITOR
@@ -550,7 +550,7 @@ namespace UnityEngine.Rendering.Universal
                 // Scene view camera should always resolve target (not stacked)
                 Assertions.Assert.IsTrue(lastCameraInTheStack, "Editor camera must resolve target upon finish rendering.");
                 m_SceneViewDepthCopyPass.Setup(m_DepthTexture);
-                EnqueuePass(m_SceneViewDepthCopyPass);
+                AddPass(m_SceneViewDepthCopyPass);
             }
 #endif
         }
@@ -627,15 +627,15 @@ namespace UnityEngine.Rendering.Universal
                 m_ActiveCameraDepthAttachment, m_GBufferHandles
             );
 
-            EnqueuePass(m_GBufferPass);
+            AddPass(m_GBufferPass);
 
-            EnqueuePass(m_RenderOpaqueForwardOnlyPass);
+            AddPass(m_RenderOpaqueForwardOnlyPass);
 
             //Must copy depth for deferred shading: TODO wait for API fix to bind depth texture as read-only resource.
             if (!hasDepthPrepass)
             {
                 m_GBufferCopyDepthPass.Setup(m_CameraDepthAttachment, m_DepthTexture);
-                EnqueuePass(m_GBufferCopyDepthPass);
+                AddPass(m_GBufferCopyDepthPass);
             }
 
             // Note: DeferredRender.Setup is called by UniversalRenderPipeline.RenderSingleCamera (overrides ScriptableRenderer.Setup).
@@ -646,17 +646,17 @@ namespace UnityEngine.Rendering.Universal
             {
                 // Compute for each tile a 32bits bitmask in which a raised bit means "this 1/32th depth slice contains geometry that could intersect with lights".
                 // Per-tile bitmasks are obtained by merging together the per-pixel bitmasks computed for each individual pixel of the tile.
-                EnqueuePass(m_TileDepthRangePass);
+                AddPass(m_TileDepthRangePass);
 
                 // On some platform, splitting the bitmasks computation into two passes:
                 //   1/ Compute bitmasks for individual or small blocks of pixels
                 //   2/ merge those individual bitmasks into per-tile bitmasks
                 // provides better performance that doing it in a single above pass.
                 if (m_DeferredLights.HasTileDepthRangeExtraPass())
-                    EnqueuePass(m_TileDepthRangeExtraPass);
+                    AddPass(m_TileDepthRangeExtraPass);
             }
 
-            EnqueuePass(m_DeferredPass);
+            AddPass(m_DeferredPass);
         }
 
         private struct RenderPassInputSummary
