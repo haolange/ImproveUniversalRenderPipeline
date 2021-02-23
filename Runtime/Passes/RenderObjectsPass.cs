@@ -5,13 +5,14 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace UnityEngine.Experimental.Rendering.Universal
 {
-    [MovedFrom("UnityEngine.Experimental.Rendering.LWRP")] public class RenderObjectsPass : ScriptableRenderPass
+    [MovedFrom("UnityEngine.Experimental.Rendering.LWRP")] 
+    public class RenderObjectsPass : ScriptableRenderPass
     {
+        string m_ProfilerTag;
         RenderQueueType renderQueueType;
+        ProfilingSampler m_ProfilingSampler;
         FilteringSettings m_FilteringSettings;
         RenderObjects.CustomCameraSettings m_CameraSettings;
-        string m_ProfilerTag;
-        ProfilingSampler m_ProfilingSampler;
 
         public Material overrideMaterial { get; set; }
         public int overrideMaterialPassIndex { get; set; }
@@ -45,14 +46,12 @@ namespace UnityEngine.Experimental.Rendering.Universal
             base.profilingSampler = new ProfilingSampler(nameof(RenderObjectsPass));
 
             m_ProfilerTag = profilerTag;
-            m_ProfilingSampler = new ProfilingSampler(profilerTag);
-            this.renderPassEvent = renderPassEvent;
-            this.renderQueueType = renderQueueType;
             this.overrideMaterial = null;
             this.overrideMaterialPassIndex = 0;
-            RenderQueueRange renderQueueRange = (renderQueueType == RenderQueueType.Transparent)
-                ? RenderQueueRange.transparent
-                : RenderQueueRange.opaque;
+            this.renderPassEvent = renderPassEvent;
+            this.renderQueueType = renderQueueType;
+            m_ProfilingSampler = new ProfilingSampler(profilerTag);
+            RenderQueueRange renderQueueRange = (renderQueueType == RenderQueueType.Transparent) ? RenderQueueRange.transparent : RenderQueueRange.opaque;
             m_FilteringSettings = new FilteringSettings(renderQueueRange, layerMask);
 
             if (shaderTags != null && shaderTags.Length > 0)
@@ -68,9 +67,8 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 m_ShaderTagIdList.Add(new ShaderTagId("LightweightForward"));
             }
 
-            m_RenderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             m_CameraSettings = cameraSettings;
-
+            m_RenderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
         }
 
         internal RenderObjectsPass(URPProfileId profileId, RenderPassEvent renderPassEvent, string[] shaderTags, RenderQueueType renderQueueType, int layerMask, RenderObjects.CustomCameraSettings cameraSettings)
@@ -81,10 +79,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            SortingCriteria sortingCriteria = (renderQueueType == RenderQueueType.Transparent)
-                ? SortingCriteria.CommonTransparent
-                : renderingData.cameraData.defaultOpaqueSortFlags;
-
+            SortingCriteria sortingCriteria = (renderQueueType == RenderQueueType.Transparent) ? SortingCriteria.CommonTransparent : renderingData.cameraData.defaultOpaqueSortFlags;
             DrawingSettings drawingSettings = CreateDrawingSettings(m_ShaderTagIdList, ref renderingData, sortingCriteria);
             drawingSettings.overrideMaterial = overrideMaterial;
             drawingSettings.overrideMaterialPassIndex = overrideMaterialPassIndex;
@@ -109,8 +104,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                     }
                     else
                     {
-                        Matrix4x4 projectionMatrix = Matrix4x4.Perspective(m_CameraSettings.cameraFieldOfView, cameraAspect,
-                            camera.nearClipPlane, camera.farClipPlane);
+                        Matrix4x4 projectionMatrix = Matrix4x4.Perspective(m_CameraSettings.cameraFieldOfView, cameraAspect, camera.nearClipPlane, camera.farClipPlane);
                         projectionMatrix = GL.GetGPUProjectionMatrix(projectionMatrix, cameraData.IsCameraProjectionMatrixFlipped());
 
                         Matrix4x4 viewMatrix = cameraData.GetViewMatrix();
@@ -124,8 +118,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
 
-                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref m_FilteringSettings,
-                    ref m_RenderStateBlock);
+                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref m_FilteringSettings, ref m_RenderStateBlock);
 
                 if (m_CameraSettings.overrideCamera && m_CameraSettings.restoreCamera && !cameraData.xr.enabled)
                 {
