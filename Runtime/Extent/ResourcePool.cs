@@ -113,11 +113,22 @@ namespace UnityEngine.Rendering.Universal.Extent
         }
     }
 
-    public struct FResourceRef
+    public struct BufferRef
     {
-        internal int handle;
+        internal int Handle;
+        public ComputeBuffer Buffer;
 
-        internal FResourceRef(int handle) { this.handle = handle; }
+        internal BufferRef(int InHandle, ComputeBuffer InBuffer) { Handle = InHandle; Buffer = InBuffer; }
+        public static implicit operator ComputeBuffer(BufferRef BufferHandle) => BufferHandle.Buffer;
+    }
+
+    public struct TextureRef
+    {
+        internal int Handle;
+        public RTHandle Texture;
+
+        internal TextureRef(int InHandle, RTHandle InTexture) { Handle = InHandle; Texture = InTexture; }
+        public static implicit operator RTHandle(TextureRef TextureHandle) => TextureHandle.Texture;
     }
 
     public abstract class FGPUResourcePool<Type> where Type : class
@@ -164,14 +175,14 @@ namespace UnityEngine.Rendering.Universal.Extent
         }
     }
 
-    public class FTexturePool : FGPUResourcePool<RenderTexture>
+    public class FTexturePool : FGPUResourcePool<RTHandle>
     {
-        protected override void ReleaseInternalResource(RenderTexture res)
+        protected override void ReleaseInternalResource(RTHandle res)
         {
             res.Release();
         }
 
-        protected override string GetResourceName(RenderTexture res)
+        protected override string GetResourceName(RTHandle res)
         {
             return res.name;
         }

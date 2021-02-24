@@ -10,88 +10,53 @@ namespace UnityEngine.Rendering.Universal.Extent
     {
         FBufferPool m_BufferPool;
         FTexturePool m_TexturePool;
-        int BufferRefID;
-        List<FResourceRef> BufferRefs;
-        Dictionary<int, int> m_BuffersMap;
-        Dictionary<int, int> m_TexturesMap;
 
         public FResourceFactory()
         {
             m_BufferPool = new FBufferPool();
-            m_BuffersMap = new Dictionary<int, int>(16);
-
             m_TexturePool = new FTexturePool();
-            m_TexturesMap = new Dictionary<int, int>(128);
-
-            BufferRefs = new List<FResourceRef>(64);
         }
 
         internal void Reset()
         {
-            m_BuffersMap.Clear();
-            m_TexturesMap.Clear();
 
-            BufferRefID = 0;
-            BufferRefs.Clear();
         }
 
-        public ComputeBuffer PullBuffer(in BufferDescription Description)
+        public BufferRef PullBuffer(in BufferDescription Description)
         {
             ComputeBuffer Buffer;
-            int CacheIndex = Description.GetHashCode();
+            int Handle = Description.GetHashCode();
 
-            if (!m_BufferPool.Pull(CacheIndex, out Buffer))
+            if (!m_BufferPool.Pull(Handle, out Buffer))
             {
                 Buffer = new ComputeBuffer(Description.count, Description.stride, Description.type);
             }
-            m_BuffersMap[Buffer.GetHashCode()] = CacheIndex;
 
-            return Buffer;
+            return new BufferRef(Handle, Buffer);
         }
 
-        public void PushBuffer(ComputeBuffer Buffer)
+        internal void PushBuffer(in BufferRef BufferHandle)
         {
-            m_BufferPool.Push(m_BuffersMap[Buffer.GetHashCode()], Buffer);
+            m_BufferPool.Push(BufferHandle.Handle, BufferHandle.Buffer);
         }
 
-        public ComputeBuffer AllocateBuffer(in BufferDescription Description)
+        public TextureRef PullTexture(in TextureDescription Description)
         {
-            ComputeBuffer Buffer;
-            FResourceRef ResourceRef = new FResourceRef(Description.GetHashCode());
-            int HandleID = 
+            RTHandle Texture;
+            int Handle = Description.GetHashCode();
 
-            if (!m_BufferPool.Pull(ResourceRef.handle, out Buffer))
-            {
-                Buffer = new ComputeBuffer(Description.count, Description.stride, Description.type);
-            }
-            m_BuffersMap[Buffer.GetHashCode()] = CacheIndex;
-
-            return Buffer;
-        }
-
-        public void ReleaseBuffer(ComputeBuffer Buffer)
-        {
-            m_BufferPool.Push(m_BuffersMap[Buffer.GetHashCode()], Buffer);
-        }
-
-        public RenderTexture AllocateTexture(in TextureDescription Description)
-        {
-            RenderTexture Texture;
-            int CacheIndex = Description.GetHashCode();
-
-            if (!m_TexturePool.Pull(CacheIndex, out Texture))
+            if (!m_TexturePool.Pull(Handle, out Texture))
             {
                 Texture = RTHandles.Alloc(Description.width, Description.height, Description.slices, (DepthBits)Description.depthBufferBits, Description.colorFormat, Description.filterMode, Description.wrapMode, Description.dimension, Description.enableRandomWrite,
                                           Description.useMipMap, Description.autoGenerateMips, Description.isShadowMap, Description.anisoLevel, Description.mipMapBias, (MSAASamples)Description.msaaSamples, Description.bindTextureMS, false, RenderTextureMemoryless.None, Description.name);
             }
-            m_TexturesMap[Texture.GetHashCode()] = CacheIndex;
 
-            return Texture;
+            return new TextureRef(Handle, Texture);
         }
 
-        public void ReleaseTexture(RenderTexture Buffer)
+        public void PushTexture(in TextureRef TextureHandle)
         {
-            m_TexturePool.Push(m_TexturesMap[Buffer.GetHashCode()], Buffer);
+            m_TexturePool.Push(TextureHandle.Handle, TextureHandle.Texture);
         }
 
         public void Disposed()
