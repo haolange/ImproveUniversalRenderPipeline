@@ -84,6 +84,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 Camera camera = renderingData.cameraData.camera;
                 var sortFlags = (m_IsOpaque) ? renderingData.cameraData.defaultOpaqueSortFlags : SortingCriteria.CommonTransparent;
                 var drawSettings = CreateDrawingSettings(m_ShaderTagIdList, ref renderingData, sortFlags);
+                drawSettings.enableInstancing = true;
                 var filterSettings = m_FilteringSettings;
 
                 #if UNITY_EDITOR
