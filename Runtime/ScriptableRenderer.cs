@@ -1,8 +1,8 @@
 using System;
+using Unity.Collections;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Unity.Collections;
-using UnityEngine.Profiling;
+using UnityEngine.Rendering.Universal.Extent;
 
 namespace UnityEngine.Rendering.Universal
 {
@@ -366,8 +366,12 @@ namespace UnityEngine.Rendering.Universal
             m_ActiveDepthAttachment = depthAttachment;
         }
 
+        protected FResourceFactory ResourceFactory;
+
         public ScriptableRenderer(ScriptableRendererData data)
         {
+            ResourceFactory = new FResourceFactory();
+
             profilingExecute = new ProfilingSampler($"{nameof(ScriptableRenderer)}.{nameof(ScriptableRenderer.Execute)}: {data.name}");
 
             foreach (var feature in data.rendererFeatures)
@@ -383,6 +387,8 @@ namespace UnityEngine.Rendering.Universal
 
         public void Dispose()
         {
+            ResourceFactory.Disposed();
+
             // Dispose all renderer features...
             for (int i = 0; i < m_RendererFeatures.Count; ++i)
             {
