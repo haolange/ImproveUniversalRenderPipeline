@@ -1,11 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Unity.Collections;
 
 namespace UnityEngine.Rendering.Universal.Extent
 {
+    public enum EAllocator
+    {
+        //in 4 frame if not use will be dispose
+        Tem = 0,
+
+        //release by Menu
+        Persistent = 1
+    }
+
     public class FResourceFactory
     {
         FBufferPool m_BufferPool;
@@ -22,7 +27,7 @@ namespace UnityEngine.Rendering.Universal.Extent
 
         }
 
-        public BufferRef PullBuffer(in BufferDescription Description)
+        public BufferRef AllocateBuffer(in BufferDescription Description, EAllocator Allocator = EAllocator.Persistent)
         {
             ComputeBuffer Buffer;
             int Handle = Description.GetHashCode();
@@ -35,12 +40,12 @@ namespace UnityEngine.Rendering.Universal.Extent
             return new BufferRef(Handle, Buffer);
         }
 
-        internal void PushBuffer(in BufferRef BufferHandle)
+        internal void ReleaseBuffer(in BufferRef BufferHandle)
         {
             m_BufferPool.Push(BufferHandle.Handle, BufferHandle.Buffer);
         }
 
-        public TextureRef PullTexture(in TextureDescription Description)
+        public TextureRef AllocateTexture(in TextureDescription Description)
         {
             RTHandle Texture;
             int Handle = Description.GetHashCode();
@@ -54,7 +59,7 @@ namespace UnityEngine.Rendering.Universal.Extent
             return new TextureRef(Handle, Texture);
         }
 
-        public void PushTexture(in TextureRef TextureHandle)
+        public void ReleaseTexture(in TextureRef TextureHandle)
         {
             m_TexturePool.Push(TextureHandle.Handle, TextureHandle.Texture);
         }

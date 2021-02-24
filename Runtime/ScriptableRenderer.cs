@@ -368,10 +368,13 @@ namespace UnityEngine.Rendering.Universal
 
         protected FResourceFactory ResourceFactory;
 
+        public void SetResourceFactory(FResourceFactory InResourceFactory)
+        {
+            ResourceFactory = InResourceFactory;
+        }
+
         public ScriptableRenderer(ScriptableRendererData data)
         {
-            ResourceFactory = new FResourceFactory();
-
             profilingExecute = new ProfilingSampler($"{nameof(ScriptableRenderer)}.{nameof(ScriptableRenderer.Execute)}: {data.name}");
 
             foreach (var feature in data.rendererFeatures)
@@ -387,8 +390,6 @@ namespace UnityEngine.Rendering.Universal
 
         public void Dispose()
         {
-            ResourceFactory.Disposed();
-
             // Dispose all renderer features...
             for (int i = 0; i < m_RendererFeatures.Count; ++i)
             {

@@ -251,6 +251,17 @@ namespace UnityEngine.Rendering.Universal
             ref CameraData cameraData = ref renderingData.cameraData;
             RenderTextureDescriptor cameraTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
 
+            BufferRef BufferA = ResourceFactory.AllocateBuffer(new BufferDescription(5, 4, ComputeBufferType.Structured));
+            ResourceFactory.ReleaseBuffer(BufferA);
+
+            BufferRef BufferB = ResourceFactory.AllocateBuffer(new BufferDescription(5, 4, ComputeBufferType.Structured));
+            ResourceFactory.ReleaseBuffer(BufferB);
+
+            BufferRef BufferC = ResourceFactory.AllocateBuffer(new BufferDescription(5, 16, ComputeBufferType.Structured));
+            BufferRef BufferD = ResourceFactory.AllocateBuffer(new BufferDescription(5, 16, ComputeBufferType.Structured));
+            ResourceFactory.ReleaseBuffer(BufferC);
+            ResourceFactory.ReleaseBuffer(BufferD);
+
             // Special path for depth only offscreen cameras. Only write opaques + transparents.
             bool isOffscreenDepthTexture = cameraData.targetTexture != null && cameraData.targetTexture.format == RenderTextureFormat.Depth;
             if (isOffscreenDepthTexture)

@@ -9,6 +9,7 @@ using UnityEngine.Scripting.APIUpdating;
 using Lightmapping = UnityEngine.Experimental.GlobalIllumination.Lightmapping;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Profiling;
+using UnityEngine.Rendering.Universal.Extent;
 
 namespace UnityEngine.Rendering.LWRP
 {
@@ -25,6 +26,7 @@ namespace UnityEngine.Rendering.Universal
 {
     public sealed partial class UniversalRenderPipeline : RenderPipeline
     {
+        public FResourceFactory ResourceFactory;
         public const string k_ShaderTagName = "UniversalPipeline";
 
         private static class Profiling
@@ -164,6 +166,8 @@ namespace UnityEngine.Rendering.Universal
             CameraCaptureBridge.enabled = true;
 
             RenderingUtils.ClearSystemInfoCache();
+
+            ResourceFactory = new FResourceFactory();
         }
 
         protected override void Dispose(bool disposing)
@@ -184,6 +188,8 @@ namespace UnityEngine.Rendering.Universal
 #endif
             Lightmapping.ResetDelegate();
             CameraCaptureBridge.enabled = false;
+
+            ResourceFactory.Disposed();
         }
 
 #if UNITY_2021_1_OR_NEWER
@@ -276,7 +282,7 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="context">Render context used to record commands during execution.</param>
         /// <param name="camera">Camera to render.</param>
         /// <seealso cref="ScriptableRenderContext"/>
-        public static void RenderSingleCamera(ScriptableRenderContext context, Camera camera)
+        public void RenderSingleCamera(ScriptableRenderContext context, Camera camera)
         {
             UniversalAdditionalCameraData additionalCameraData = null;
             if (IsGameCamera(camera))
@@ -320,7 +326,7 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="context">Render context used to record commands during execution.</param>
         /// <param name="cameraData">Camera rendering data. This might contain data inherited from a base camera.</param>
         /// <param name="anyPostProcessingEnabled">True if at least one camera has post-processing enabled in the stack, false otherwise.</param>
-        static void RenderSingleCamera(ScriptableRenderContext context, CameraData cameraData, bool anyPostProcessingEnabled)
+        void RenderSingleCamera(ScriptableRenderContext context, CameraData cameraData, bool anyPostProcessingEnabled)
         {
             Camera camera = cameraData.camera;
             var renderer = cameraData.renderer;
@@ -343,6 +349,7 @@ namespace UnityEngine.Rendering.Universal
             // Resulting in following pattern:
             // exec(cmd.start, scope.start, cmd.end) and exec(cmd.start, scope.end, cmd.end)
             CommandBuffer cmd = CommandBufferPool.Get();
+            renderer.SetResourceFactory(ResourceFactory);
             ProfilingSampler sampler = Profiling.TryGetOrAddCameraSampler(camera);
             using (new ProfilingScope(cmd, sampler)) // Enqueues a "BeginSample" command into the CommandBuffer cmd
             {
@@ -400,7 +407,7 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         /// <param name="context">Render context used to record commands during execution.</param>
         /// <param name="camera">Camera to render.</param>
-        static void RenderCameraStack(ScriptableRenderContext context, Camera baseCamera)
+        void RenderCameraStack(ScriptableRenderContext context, Camera baseCamera)
         {
             using var profScope = new ProfilingScope(null, ProfilingSampler.Get(URPProfileId.RenderCameraStack));
 
